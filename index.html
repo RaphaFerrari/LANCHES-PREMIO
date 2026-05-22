@@ -260,24 +260,44 @@
 
     <!-- Script da Aplicação -->
     <script>
+        // --- FUNÇÃO HÍBRIDA DE IMAGENS (FALLBACK) ---
+        function imageFallback(imgElement, baseName) {
+            // Conta quantas tentativas já foram feitas
+            if (!imgElement.dataset.tries) imgElement.dataset.tries = 0;
+            let tries = parseInt(imgElement.dataset.tries);
+            
+            // Lista de formatos para tentar automaticamente se o .jpg falhar
+            const exts = ['.png', '.jpeg', '.webp']; 
+            
+            if (tries < exts.length) {
+                // Tenta a próxima extensão
+                imgElement.src = baseName + exts[tries];
+                imgElement.dataset.tries = tries + 1;
+            } else {
+                // Se falhar em todas, exibe um placeholder (Sem Foto)
+                imgElement.onerror = null; // Previne loop infinito
+                imgElement.src = 'https://placehold.co/400x300/600000/facc15?text=Sem+Foto';
+            }
+        }
+
         // --- DADOS DO CARDÁPIO ATUALIZADOS ---
         const menuData = {
             avulsos: [
-                { id: 'a1', name: 'Coxinha Premium', desc: 'Massa cremosa com muito recheio de frango desfiado temperado.', price: 7.50, img: 'https://images.unsplash.com/photo-1628840042765-356cda07504e?auto=format&fit=crop&q=80&w=400&h=300' },
-                { id: 'a2', name: 'Empada de Frango', desc: 'Massa que derrete na boca, padrão premium Lanches Prêmio.', price: 8.00, img: 'https://images.unsplash.com/photo-1604908176997-125f25cc6f3d?auto=format&fit=crop&q=80&w=400&h=300' },
-                { id: 'a3', name: 'Pastel de Carne', desc: 'Pastel sequinho e crocante com carne moída de primeira.', price: 6.50, img: 'https://images.unsplash.com/photo-1541592106381-b31e9677c0e5?auto=format&fit=crop&q=80&w=400&h=300' },
-                { id: 'a4', name: 'Bolinha de Queijo', desc: 'Queijo derretido e esticando, empanado perfeitamente.', price: 7.00, img: 'https://images.unsplash.com/photo-1528735602780-2552fd46c7af?auto=format&fit=crop&q=80&w=400&h=300' }
+                { id: 'a1', name: 'Coxinha Premium', desc: 'Massa cremosa com muito recheio de frango desfiado temperado.', price: 7.50, imgBase: 'coxinha' },
+                { id: 'a2', name: 'Empada de Frango', desc: 'Massa que derrete na boca, padrão premium Lanches Prêmio.', price: 8.00, imgBase: 'empada' },
+                { id: 'a3', name: 'Pastel de Carne', desc: 'Pastel sequinho e crocante com carne moída de primeira.', price: 6.50, imgBase: 'pastelcarne' },
+                { id: 'a4', name: 'Bolinha de Queijo', desc: 'Queijo derretido e esticando, empanado perfeitamente.', price: 7.00, imgBase: 'bolinhoqueijo' }
             ],
             kits: [
-                { id: 'k1', name: 'Kit Casal Premium', desc: '10 Salgados mistos + 2 Sucos de Laranja (500ml)', price: 45.00, img: 'https://images.unsplash.com/photo-1560008453-739343cd29dc?auto=format&fit=crop&q=80&w=400&h=300' },
-                { id: 'k2', name: 'Kit Festa 50', desc: '50 Salgados sortidos padrão festa (tamanho reduzido)', price: 85.00, img: 'https://images.unsplash.com/photo-1555939594-58d7cb561ad1?auto=format&fit=crop&q=80&w=400&h=300' },
-                { id: 'k3', name: 'Combo Empadas', desc: '5 Empadas de sabores sortidos', price: 35.00, img: 'https://images.unsplash.com/photo-1604908176997-125f25cc6f3d?auto=format&fit=crop&q=80&w=400&h=300' }
+                { id: 'k1', name: 'Kit Casal Premium', desc: '10 Salgados mistos + 2 Sucos de Laranja (500ml)', price: 45.00, imgBase: 'kitcasal' },
+                { id: 'k2', name: 'Kit Festa 50', desc: '50 Salgados sortidos padrão festa (tamanho reduzido)', price: 85.00, imgBase: 'kitfesta' },
+                { id: 'k3', name: 'Combo Empadas', desc: '5 Empadas de sabores sortidos', price: 35.00, imgBase: 'comboempadas' }
             ],
             bebidas: [
-                { id: 'b1', name: 'Coca-Cola 2L', desc: 'Refrigerante Coca-Cola Garrafa PET 2 Litros.', price: 14.00, img: 'https://images.unsplash.com/photo-1622483767028-3f66f32aef97?auto=format&fit=crop&q=80&w=400&h=300' },
-                { id: 'b2', name: 'Suco de Laranja 500ml', desc: 'Suco natural da fruta, sem adição de açúcar e bem gelado.', price: 8.50, img: 'https://images.unsplash.com/photo-1600271886742-f049cd451bba?auto=format&fit=crop&q=80&w=400&h=300' },
-                { id: 'b3', name: 'Guaraná Antarctica Lata', desc: 'Lata 350ml geladinha.', price: 6.00, img: 'https://images.unsplash.com/photo-1629203851288-7ece11f59203?auto=format&fit=crop&q=80&w=400&h=300' },
-                { id: 'b4', name: 'Água Mineral sem Gás', desc: 'Garrafa 500ml.', price: 4.00, img: 'https://images.unsplash.com/photo-1559839914-17aae19cb548?auto=format&fit=crop&q=80&w=400&h=300' }
+                { id: 'b1', name: 'Coca-Cola 2L', desc: 'Refrigerante Coca-Cola Garrafa PET 2 Litros.', price: 14.00, imgBase: 'cocacola' },
+                { id: 'b2', name: 'Suco de Laranja 500ml', desc: 'Suco natural da fruta, sem adição de açúcar e bem gelado.', price: 8.50, imgBase: 'sucolaranja' },
+                { id: 'b3', name: 'Guaraná Antarctica Lata', desc: 'Lata 350ml geladinha.', price: 6.00, imgBase: 'guanaralata' },
+                { id: 'b4', name: 'Água Mineral sem Gás', desc: 'Garrafa 500ml.', price: 4.00, imgBase: 'aguasemgas' }
             ]
         };
 
@@ -335,7 +355,7 @@
                 const cardHtml = `
                     <div class="bg-brand-card rounded-2xl overflow-hidden border border-white/5 shadow-xl flex flex-col group transition-all duration-300 hover:shadow-2xl hover:border-brand-gold/30">
                         <div class="h-56 overflow-hidden relative">
-                            <img src="${prod.img}" alt="${prod.name}" class="w-full h-full object-cover transition-transform duration-500 group-hover:scale-110">
+                            <img src="${prod.imgBase}.jpg" onerror="imageFallback(this, '${prod.imgBase}')" alt="${prod.name}" class="w-full h-full object-cover transition-transform duration-500 group-hover:scale-110">
                             <div class="absolute inset-0 bg-gradient-to-t from-brand-card to-transparent opacity-80"></div>
                             
                             <div class="absolute bottom-3 left-4 right-4 flex justify-between items-end">
@@ -404,7 +424,7 @@
 
                     const itemHtml = `
                         <div class="flex gap-4 items-center bg-black/20 p-3 rounded-xl border border-white/5 relative group">
-                            <img src="${product.img}" class="w-20 h-20 object-cover rounded-lg shadow-sm">
+                            <img src="${product.imgBase}.jpg" onerror="imageFallback(this, '${product.imgBase}')" class="w-20 h-20 object-cover rounded-lg shadow-sm">
                             <div class="flex-grow">
                                 <h4 class="font-bold text-sm text-white line-clamp-2 leading-tight mb-1">${product.name}</h4>
                                 <p class="text-brand-gold font-bold text-sm">R$ ${(product.price * quantity).toFixed(2).replace('.', ',')}</p>
