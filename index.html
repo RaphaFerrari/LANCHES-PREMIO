@@ -1,0 +1,527 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Lanches Premio - Meu Lanche Premium</title>
+    
+    <!-- Tailwind CSS -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    
+    <!-- Phosphor Icons para ícones modernos -->
+    <script src="https://unpkg.com/@phosphor-icons/web"></script>
+    
+    <!-- Google Fonts -->
+    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;500;600;700&family=Playfair+Display:wght@700&display=swap" rel="stylesheet">
+
+    <!-- Configuração de Cores Personalizadas no Tailwind -->
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    colors: {
+                        brand: {
+                            dark: '#4a0000',     // Fundo principal (Bordô escuro)
+                            red: '#8b0000',      // Vermelho principal
+                            card: '#600000',     // Fundo dos cartões
+                            gold: '#facc15',     // Dourado/Amarelo dos botões
+                            goldHover: '#eab308' // Dourado escuro para hover
+                        }
+                    },
+                    fontFamily: {
+                        sans: ['Poppins', 'sans-serif'],
+                        serif: ['Playfair Display', 'serif'],
+                    }
+                }
+            }
+        }
+    </script>
+
+    <style>
+        body { background-color: #4a0000; color: #ffffff; }
+        
+        /* Estilização da barra de rolagem */
+        ::-webkit-scrollbar { width: 8px; }
+        ::-webkit-scrollbar-track { background: #4a0000; }
+        ::-webkit-scrollbar-thumb { background: #facc15; border-radius: 4px; }
+        
+        /* Animações suaves para os modais */
+        .modal-enter { animation: fadeIn 0.3s ease-out forwards; }
+        .slide-up { animation: slideUp 0.3s ease-out forwards; }
+        
+        @keyframes fadeIn {
+            from { opacity: 0; }
+            to { opacity: 1; }
+        }
+        @keyframes slideUp {
+            from { transform: translateY(100%); }
+            to { transform: translateY(0); }
+        }
+
+        /* Ocultar scrollbar em elementos específicos */
+        .no-scrollbar::-webkit-scrollbar { display: none; }
+        .no-scrollbar { -ms-overflow-style: none; scrollbar-width: none; }
+    </style>
+</head>
+<body class="antialiased font-sans min-h-screen flex flex-col">
+
+    <!-- Cabeçalho Fixo -->
+    <header class="fixed top-0 w-full bg-brand-red shadow-lg shadow-black/20 z-40 border-b border-brand-gold/30">
+        <div class="container mx-auto px-4 h-20 flex justify-between items-center">
+            <!-- Logo Solicitada -->
+            <div class="flex items-center gap-3">
+                <img src="logo.jpg" alt="Logo Lanches Premio" class="h-16 object-contain rounded-md" onerror="this.src='https://placehold.co/100x100/facc15/4a0000?text=LOGO'">
+                <div class="hidden sm:block">
+                    <h1 class="font-serif text-2xl font-bold text-white tracking-wide">Lanches Prêmio</h1>
+                    <p class="text-brand-gold text-xs font-medium uppercase tracking-widest">O seu lanche premium</p>
+                </div>
+            </div>
+
+            <!-- Botão do Carrinho -->
+            <button onclick="toggleCart()" class="relative flex items-center justify-center bg-brand-gold text-brand-dark p-3 rounded-full hover:bg-brand-goldHover transition-colors shadow-md">
+                <i class="ph ph-shopping-cart text-2xl"></i>
+                <span id="cart-count" class="absolute -top-1 -right-1 bg-white text-brand-red text-xs font-bold w-6 h-6 flex items-center justify-center rounded-full border-2 border-brand-gold">0</span>
+            </button>
+        </div>
+    </header>
+
+    <!-- Conteúdo Principal -->
+    <main class="flex-grow container mx-auto px-4 pt-28 pb-20">
+        
+        <!-- Abas / Categorias -->
+        <div class="flex justify-center gap-4 mb-8">
+            <button id="tab-avulsos" onclick="switchTab('avulsos')" class="tab-btn px-6 py-3 rounded-full font-semibold border-2 border-brand-gold bg-brand-gold text-brand-dark transition-all">
+                Salgados Avulsos
+            </button>
+            <button id="tab-kits" onclick="switchTab('kits')" class="tab-btn px-6 py-3 rounded-full font-semibold border-2 border-brand-gold text-brand-gold hover:bg-brand-gold/10 transition-all">
+                Kits Especiais
+            </button>
+        </div>
+
+        <!-- Grid de Produtos -->
+        <div id="products-grid" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
+            <!-- Os produtos serão injetados aqui via JavaScript -->
+        </div>
+
+    </main>
+
+    <!-- Rodapé -->
+    <footer class="bg-brand-red border-t border-brand-gold/30 mt-auto">
+        <div class="container mx-auto px-4 py-8 text-center text-sm text-gray-300">
+            <p class="font-bold text-white text-lg mb-2 font-serif">Lanches Prêmio</p>
+            <p><i class="ph ph-map-pin mr-1 text-brand-gold"></i> Monteiro Lobato, 380 - loja 4</p>
+            <p>Ouro Preto, Belo Horizonte - MG, 31310-530, Brasil</p>
+            <p class="mt-4 text-brand-gold font-medium"><i class="ph ph-whatsapp mr-1"></i> (31) 99350-3644</p>
+        </div>
+    </footer>
+
+    <!-- Overlay e Modal do Carrinho -->
+    <div id="cart-modal" class="fixed inset-0 z-50 hidden">
+        <!-- Fundo escuro -->
+        <div class="absolute inset-0 bg-black/70 backdrop-blur-sm" onclick="toggleCart()"></div>
+        
+        <!-- Painel Lateral / Modal -->
+        <div class="absolute top-0 right-0 h-full w-full max-w-md bg-brand-card shadow-2xl flex flex-col border-l border-brand-gold/30 slide-up sm:slide-left">
+            <div class="p-5 border-b border-white/10 flex justify-between items-center bg-brand-red">
+                <h2 class="text-xl font-bold flex items-center gap-2">
+                    <i class="ph ph-shopping-bag text-brand-gold text-2xl"></i> Seu Pedido
+                </h2>
+                <button onclick="toggleCart()" class="text-gray-300 hover:text-white p-2">
+                    <i class="ph ph-x text-xl"></i>
+                </button>
+            </div>
+
+            <!-- Lista de Itens do Carrinho -->
+            <div id="cart-items" class="flex-grow overflow-y-auto p-5 flex flex-col gap-4 no-scrollbar">
+                <!-- Itens injetados via JS -->
+            </div>
+
+            <!-- Rodapé do Carrinho -->
+            <div class="p-5 bg-brand-red border-t border-white/10">
+                <div class="flex justify-between items-center mb-4 text-lg font-bold">
+                    <span>Total:</span>
+                    <span id="cart-total" class="text-brand-gold">R$ 0,00</span>
+                </div>
+                <div class="flex gap-3">
+                    <button onclick="clearCart()" class="px-4 py-3 bg-white/10 text-white rounded-lg hover:bg-white/20 transition-colors flex items-center justify-center font-medium">
+                        <i class="ph ph-trash text-lg"></i>
+                    </button>
+                    <button onclick="openCheckout()" class="flex-grow bg-brand-gold text-brand-dark py-3 rounded-lg font-bold hover:bg-brand-goldHover transition-colors flex items-center justify-center gap-2 shadow-lg">
+                        Avançar para Checkout <i class="ph ph-arrow-right font-bold"></i>
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Modal de Checkout (Formulário) -->
+    <div id="checkout-modal" class="fixed inset-0 z-50 hidden flex items-center justify-center p-4">
+        <!-- Fundo escuro -->
+        <div class="absolute inset-0 bg-black/80 backdrop-blur-sm modal-enter" onclick="closeCheckout()"></div>
+        
+        <div class="relative bg-brand-card w-full max-w-lg rounded-2xl shadow-2xl overflow-hidden modal-enter flex flex-col max-h-[90vh]">
+            <div class="p-5 bg-brand-red border-b border-brand-gold/30 flex justify-between items-center">
+                <h2 class="text-xl font-bold font-serif text-brand-gold">Finalizar Pedido</h2>
+                <button onclick="closeCheckout()" class="text-gray-300 hover:text-white">
+                    <i class="ph ph-x text-2xl"></i>
+                </button>
+            </div>
+
+            <div class="p-6 overflow-y-auto no-scrollbar">
+                <form id="checkout-form" onsubmit="finishOrder(event)" class="flex flex-col gap-4">
+                    
+                    <!-- Nome -->
+                    <div>
+                        <label class="block text-sm font-medium text-gray-300 mb-1">Nome Completo *</label>
+                        <input type="text" id="c-nome" required class="w-full bg-white/5 border border-white/20 rounded-lg px-4 py-3 text-white focus:outline-none focus:border-brand-gold focus:ring-1 focus:ring-brand-gold placeholder-gray-500" placeholder="Ex: João da Silva">
+                    </div>
+
+                    <!-- CEP e Busca -->
+                    <div class="grid grid-cols-3 gap-3">
+                        <div class="col-span-2">
+                            <label class="block text-sm font-medium text-gray-300 mb-1">CEP *</label>
+                            <input type="text" id="c-cep" required onblur="fetchCEP(this.value)" maxlength="9" class="w-full bg-white/5 border border-white/20 rounded-lg px-4 py-3 text-white focus:outline-none focus:border-brand-gold placeholder-gray-500" placeholder="00000-000">
+                        </div>
+                        <div class="flex items-end">
+                            <button type="button" onclick="fetchCEP(document.getElementById('c-cep').value)" class="w-full bg-white/10 text-brand-gold hover:bg-white/20 border border-white/20 rounded-lg h-12 flex items-center justify-center text-sm font-medium transition-colors">
+                                Buscar
+                            </button>
+                        </div>
+                    </div>
+                    <p id="cep-error" class="text-red-400 text-xs hidden -mt-2">CEP não encontrado.</p>
+
+                    <!-- Rua e Número -->
+                    <div class="grid grid-cols-4 gap-3">
+                        <div class="col-span-3">
+                            <label class="block text-sm font-medium text-gray-300 mb-1">Rua *</label>
+                            <input type="text" id="c-rua" required class="w-full bg-white/5 border border-white/20 rounded-lg px-4 py-3 text-white focus:outline-none focus:border-brand-gold">
+                        </div>
+                        <div class="col-span-1">
+                            <label class="block text-sm font-medium text-gray-300 mb-1">Número *</label>
+                            <input type="text" id="c-numero" required class="w-full bg-white/5 border border-white/20 rounded-lg px-4 py-3 text-white focus:outline-none focus:border-brand-gold">
+                        </div>
+                    </div>
+
+                    <!-- Complemento e Bairro -->
+                    <div class="grid grid-cols-2 gap-3">
+                        <div>
+                            <label class="block text-sm font-medium text-gray-300 mb-1">Complemento</label>
+                            <input type="text" id="c-complemento" class="w-full bg-white/5 border border-white/20 rounded-lg px-4 py-3 text-white focus:outline-none focus:border-brand-gold" placeholder="Apto, Bloco">
+                        </div>
+                        <div>
+                            <label class="block text-sm font-medium text-gray-300 mb-1">Bairro *</label>
+                            <input type="text" id="c-bairro" required class="w-full bg-white/5 border border-white/20 rounded-lg px-4 py-3 text-white focus:outline-none focus:border-brand-gold">
+                        </div>
+                    </div>
+
+                    <!-- Pagamento -->
+                    <div>
+                        <label class="block text-sm font-medium text-gray-300 mb-1">Forma de Pagamento *</label>
+                        <select id="c-pagamento" required class="w-full bg-white/5 border border-white/20 rounded-lg px-4 py-3 text-white focus:outline-none focus:border-brand-gold appearance-none">
+                            <option value="" disabled selected class="text-gray-900">Selecione uma opção</option>
+                            <option value="Pix" class="text-gray-900">Pix (Chave informada no zap)</option>
+                            <option value="Cartão de Crédito" class="text-gray-900">Cartão de Crédito (Maquininha)</option>
+                            <option value="Cartão de Débito" class="text-gray-900">Cartão de Débito (Maquininha)</option>
+                            <option value="Dinheiro" class="text-gray-900">Dinheiro (Levar troco)</option>
+                        </select>
+                    </div>
+
+                    <div class="mt-4">
+                        <button type="submit" class="w-full bg-[#25D366] text-white py-4 rounded-xl font-bold text-lg hover:bg-[#1DA851] transition-colors flex items-center justify-center gap-2 shadow-lg shadow-[#25D366]/20">
+                            <i class="ph ph-whatsapp text-2xl"></i> Enviar Pedido no WhatsApp
+                        </button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+
+    <!-- Script da Aplicação -->
+    <script>
+        // --- DADOS DO CARDÁPIO ---
+        const menuData = {
+            avulsos: [
+                { id: 'a1', name: 'Coxinha Premium', desc: 'Massa cremosa com muito recheio de frango desfiado temperado.', price: 7.50, img: 'https://images.unsplash.com/photo-1628840042765-356cda07504e?auto=format&fit=crop&q=80&w=400&h=300' },
+                { id: 'a2', name: 'Empada de Frango', desc: 'Massa que derrete na boca, padrão premium Lanches Prêmio.', price: 8.00, img: 'https://images.unsplash.com/photo-1604908176997-125f25cc6f3d?auto=format&fit=crop&q=80&w=400&h=300' },
+                { id: 'a3', name: 'Pastel de Carne', desc: 'Pastel sequinho e crocante com carne moída de primeira.', price: 6.50, img: 'https://images.unsplash.com/photo-1541592106381-b31e9677c0e5?auto=format&fit=crop&q=80&w=400&h=300' },
+                { id: 'a4', name: 'Bolinha de Queijo', desc: 'Queijo derretido e esticando, empanado perfeitamente.', price: 7.00, img: 'https://images.unsplash.com/photo-1528735602780-2552fd46c7af?auto=format&fit=crop&q=80&w=400&h=300' }
+            ],
+            kits: [
+                { id: 'k1', name: 'Kit Casal Premium', desc: '10 Salgados mistos + 2 Sucos de Laranja (500ml)', price: 45.00, img: 'https://images.unsplash.com/photo-1560008453-739343cd29dc?auto=format&fit=crop&q=80&w=400&h=300' },
+                { id: 'k2', name: 'Kit Festa 50', desc: '50 Salgados sortidos padrão festa (tamanho reduzido)', price: 85.00, img: 'https://images.unsplash.com/photo-1555939594-58d7cb561ad1?auto=format&fit=crop&q=80&w=400&h=300' },
+                { id: 'k3', name: 'Combo Empadas', desc: '5 Empadas de sabores sortidos', price: 35.00, img: 'https://images.unsplash.com/photo-1604908176997-125f25cc6f3d?auto=format&fit=crop&q=80&w=400&h=300' }
+            ]
+        };
+
+        // --- ESTADO DA APLICAÇÃO ---
+        let currentTab = 'avulsos';
+        let cart = {}; // Formato: { id: { product, quantity } }
+
+        // --- INICIALIZAÇÃO ---
+        document.addEventListener('DOMContentLoaded', () => {
+            renderMenu();
+        });
+
+        // --- FUNÇÕES DE RENDERIZAÇÃO ---
+        function switchTab(tab) {
+            currentTab = tab;
+            
+            // Atualizar botões visuais
+            const btnAvulsos = document.getElementById('tab-avulsos');
+            const btnKits = document.getElementById('tab-kits');
+            
+            const activeClasses = ['bg-brand-gold', 'text-brand-dark'];
+            const inactiveClasses = ['text-brand-gold', 'hover:bg-brand-gold/10'];
+
+            if(tab === 'avulsos') {
+                btnAvulsos.classList.add(...activeClasses);
+                btnAvulsos.classList.remove(...inactiveClasses);
+                btnKits.classList.add(...inactiveClasses);
+                btnKits.classList.remove(...activeClasses);
+            } else {
+                btnKits.classList.add(...activeClasses);
+                btnKits.classList.remove(...inactiveClasses);
+                btnAvulsos.classList.add(...inactiveClasses);
+                btnAvulsos.classList.remove(...activeClasses);
+            }
+
+            renderMenu();
+        }
+
+        function renderMenu() {
+            const grid = document.getElementById('products-grid');
+            grid.innerHTML = '';
+            
+            const products = menuData[currentTab];
+
+            products.forEach(prod => {
+                const qty = cart[prod.id] ? cart[prod.id].quantity : 0;
+                
+                // Botão dinâmico baseado na quantidade no carrinho
+                const actionButtonHtml = qty === 0 
+                    ? `<button onclick="updateCartItem('${prod.id}', 1)" class="w-full bg-brand-red text-brand-gold border border-brand-gold py-2 rounded-lg font-semibold hover:bg-brand-gold hover:text-brand-dark transition-colors">
+                        Adicionar
+                       </button>`
+                    : `<div class="w-full flex justify-between items-center bg-white/10 rounded-lg p-1 border border-brand-gold/30">
+                        <button onclick="updateCartItem('${prod.id}', -1)" class="w-8 h-8 flex items-center justify-center bg-brand-red text-white rounded hover:bg-red-600 transition-colors"><i class="ph ph-minus font-bold"></i></button>
+                        <span class="font-bold text-brand-gold">${qty}</span>
+                        <button onclick="updateCartItem('${prod.id}', 1)" class="w-8 h-8 flex items-center justify-center bg-brand-gold text-brand-dark rounded hover:bg-brand-goldHover transition-colors"><i class="ph ph-plus font-bold"></i></button>
+                       </div>`;
+
+                const cardHtml = `
+                    <div class="bg-brand-card rounded-2xl overflow-hidden border border-white/5 shadow-lg flex flex-col transition-transform hover:-translate-y-1 duration-300">
+                        <div class="h-48 overflow-hidden relative">
+                            <img src="${prod.img}" alt="${prod.name}" class="w-full h-full object-cover">
+                            <div class="absolute top-3 right-3 bg-brand-gold text-brand-dark font-bold px-3 py-1 rounded-full text-sm shadow-md">
+                                R$ ${prod.price.toFixed(2).replace('.', ',')}
+                            </div>
+                        </div>
+                        <div class="p-5 flex flex-col flex-grow">
+                            <h3 class="text-lg font-bold font-serif mb-2 text-white">${prod.name}</h3>
+                            <p class="text-sm text-gray-300 mb-4 flex-grow">${prod.desc}</p>
+                            <div class="mt-auto">
+                                ${actionButtonHtml}
+                            </div>
+                        </div>
+                    </div>
+                `;
+                grid.innerHTML += cardHtml;
+            });
+        }
+
+        // --- FUNÇÕES DO CARRINHO ---
+        function updateCartItem(id, change) {
+            // Acha o produto nos dados
+            let product = menuData.avulsos.find(p => p.id === id) || menuData.kits.find(p => p.id === id);
+            
+            if(!cart[id]) {
+                cart[id] = { product: product, quantity: 0 };
+            }
+
+            cart[id].quantity += change;
+
+            if(cart[id].quantity <= 0) {
+                delete cart[id];
+            }
+
+            renderMenu(); // Re-renderiza cardápio para atualizar botões
+            updateCartUI(); // Atualiza modal e badge
+        }
+
+        function updateCartUI() {
+            const cartItemsContainer = document.getElementById('cart-items');
+            const cartCount = document.getElementById('cart-count');
+            const cartTotal = document.getElementById('cart-total');
+            
+            cartItemsContainer.innerHTML = '';
+            let totalQty = 0;
+            let totalPrice = 0;
+
+            const items = Object.values(cart);
+
+            if(items.length === 0) {
+                cartItemsContainer.innerHTML = `
+                    <div class="flex flex-col items-center justify-center h-full text-gray-400 opacity-50">
+                        <i class="ph ph-shopping-cart text-6xl mb-4"></i>
+                        <p>Seu carrinho está vazio</p>
+                    </div>`;
+            } else {
+                items.forEach(item => {
+                    const { product, quantity } = item;
+                    totalQty += quantity;
+                    totalPrice += (product.price * quantity);
+
+                    const itemHtml = `
+                        <div class="flex gap-4 items-center bg-white/5 p-3 rounded-xl border border-white/5">
+                            <img src="${product.img}" class="w-16 h-16 object-cover rounded-lg">
+                            <div class="flex-grow">
+                                <h4 class="font-bold text-sm text-white">${product.name}</h4>
+                                <p class="text-brand-gold font-semibold text-sm">R$ ${(product.price * quantity).toFixed(2).replace('.', ',')}</p>
+                            </div>
+                            <div class="flex flex-col items-center gap-1">
+                                <button onclick="updateCartItem('${product.id}', 1)" class="w-6 h-6 flex items-center justify-center bg-brand-gold/20 text-brand-gold rounded hover:bg-brand-gold hover:text-brand-dark"><i class="ph ph-plus"></i></button>
+                                <span class="text-sm font-bold">${quantity}</span>
+                                <button onclick="updateCartItem('${product.id}', -1)" class="w-6 h-6 flex items-center justify-center bg-brand-red text-white rounded hover:bg-red-600"><i class="ph ph-minus"></i></button>
+                            </div>
+                        </div>
+                    `;
+                    cartItemsContainer.innerHTML += itemHtml;
+                });
+            }
+
+            cartCount.textContent = totalQty;
+            cartTotal.textContent = `R$ ${totalPrice.toFixed(2).replace('.', ',')}`;
+
+            // Pula badge de carrinho
+            cartCount.classList.remove('scale-100');
+            cartCount.classList.add('scale-125');
+            setTimeout(() => {
+                cartCount.classList.remove('scale-125');
+                cartCount.classList.add('scale-100');
+            }, 200);
+        }
+
+        function toggleCart() {
+            const modal = document.getElementById('cart-modal');
+            if (modal.classList.contains('hidden')) {
+                modal.classList.remove('hidden');
+                updateCartUI();
+            } else {
+                modal.classList.add('hidden');
+            }
+        }
+
+        function clearCart() {
+            if(Object.keys(cart).length === 0) return;
+            if(confirm("Tem certeza que deseja limpar todo o pedido?")) {
+                cart = {};
+                renderMenu();
+                updateCartUI();
+            }
+        }
+
+        // --- FUNÇÕES DE CHECKOUT ---
+        function openCheckout() {
+            if(Object.keys(cart).length === 0) {
+                alert("Seu carrinho está vazio! Adicione deliciosos salgados primeiro.");
+                return;
+            }
+            toggleCart(); // fecha carrinho
+            document.getElementById('checkout-modal').classList.remove('hidden');
+        }
+
+        function closeCheckout() {
+            document.getElementById('checkout-modal').classList.add('hidden');
+        }
+
+        // --- API VIACEP ---
+        async function fetchCEP(cepValue) {
+            const cep = cepValue.replace(/\D/g, '');
+            const errorMsg = document.getElementById('cep-error');
+            
+            if (cep.length !== 8) return;
+
+            try {
+                const response = await fetch(`https://viacep.com.br/ws/${cep}/json/`);
+                const data = await response.json();
+
+                if (data.erro) {
+                    errorMsg.classList.remove('hidden');
+                    return;
+                }
+
+                errorMsg.classList.add('hidden');
+                document.getElementById('c-rua').value = data.logradouro;
+                document.getElementById('c-bairro').value = data.bairro;
+                document.getElementById('c-numero').focus(); // Foca no número para o usuário
+                
+            } catch (error) {
+                console.error("Erro ao buscar CEP:", error);
+                errorMsg.classList.remove('hidden');
+            }
+        }
+
+        // --- MÁSCARA SIMPLES DE CEP ---
+        document.getElementById('c-cep').addEventListener('input', function (e) {
+            let x = e.target.value.replace(/\D/g, '').match(/(\d{0,5})(\d{0,3})/);
+            e.target.value = !x[2] ? x[1] : x[1] + '-' + x[2];
+        });
+
+        // --- FINALIZAR PEDIDO (WHATSAPP) ---
+        function finishOrder(e) {
+            e.preventDefault(); // Previne o envio padrão do formulário
+
+            // Pega dados do form
+            const nome = document.getElementById('c-nome').value.trim();
+            const cep = document.getElementById('c-cep').value;
+            const rua = document.getElementById('c-rua').value.trim();
+            const numero = document.getElementById('c-numero').value.trim();
+            const complemento = document.getElementById('c-complemento').value.trim();
+            const bairro = document.getElementById('c-bairro').value.trim();
+            const pagamento = document.getElementById('c-pagamento').value;
+
+            // Calcula Totais
+            let total = 0;
+            let itemsText = '';
+            
+            Object.values(cart).forEach(item => {
+                const p = item.product;
+                const q = item.quantity;
+                total += (p.price * q);
+                itemsText += `▫️ ${q}x ${p.name} - R$ ${(p.price * q).toFixed(2).replace('.', ',')}\n`;
+            });
+
+            // Constrói a mensagem
+            let msg = `*NOVO PEDIDO - LANCHES PRÊMIO* 🥟\n\n`;
+            msg += `*👤 Cliente:* ${nome}\n`;
+            msg += `*📍 Endereço de Entrega:*\n`;
+            msg += `${rua}, Nº ${numero}\n`;
+            if(complemento) msg += `Complemento: ${complemento}\n`;
+            msg += `Bairro: ${bairro} | CEP: ${cep}\n\n`;
+            
+            msg += `*🛍️ Itens do Pedido:*\n`;
+            msg += itemsText;
+            
+            msg += `\n*💰 Valor Total:* R$ ${total.toFixed(2).replace('.', ',')}\n`;
+            msg += `*💳 Forma de Pagamento:* ${pagamento}\n\n`;
+            msg += `_Pedido gerado pelo cardápio digital._`;
+
+            // Codifica a mensagem para URL
+            const urlEncodedMsg = encodeURIComponent(msg);
+            
+            // Número do WhatsApp (sem formatação, só números)
+            const phone = "5531993503644";
+            
+            // Redireciona
+            const whatsappUrl = `https://wa.me/${phone}?text=${urlEncodedMsg}`;
+            window.open(whatsappUrl, '_blank');
+
+            // Opcional: Limpar carrinho e fechar modal após o envio
+            closeCheckout();
+            cart = {};
+            renderMenu();
+            updateCartUI();
+        }
+    </script>
+</body>
+</html>
